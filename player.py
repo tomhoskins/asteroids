@@ -1,11 +1,19 @@
-from circleshape import CircleShape
-from constants import PLAYER_RADIUS, PLAYER_TURN_SPEED, LINE_WIDTH, PLAYER_SPEED
 import pygame
+from circleshape import CircleShape
+from shot import Shot
+from constants import(
+    PLAYER_RADIUS, 
+    PLAYER_TURN_SPEED, 
+    LINE_WIDTH, PLAYER_SPEED, 
+    PLAYER_SHOOT_SPEED, 
+    PLAYER_SHOOT_COOLDOWN_SECONDS
+    ) 
 
 class Player(CircleShape):
     def __init__(self, x, y):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
+        self.shot_cooldown_timer = 0
 
     # Player is a circle for hitbox, but looks like a triangle
     def triangle(self):
@@ -24,6 +32,7 @@ class Player(CircleShape):
 
     def update(self, dt):
         keys = pygame.key.get_pressed()
+        self.shot_cooldown_timer -= dt
 
         if keys[pygame.K_a]:
             self.rotate(-dt)
@@ -33,6 +42,11 @@ class Player(CircleShape):
             self.move(-dt)
         if keys[pygame.K_w]:
             self.move(dt)
+        if keys[pygame.K_SPACE]:
+            if self.shot_cooldown_timer > 0:
+                pass
+            else:
+                self.shoot()
     
     def move(self, dt):
         # vector w/length of 1, from (0,0) to (0,1) (straight up)
@@ -46,3 +60,11 @@ class Player(CircleShape):
 
         # Move the player by adding vector to position
         self.position += rotated_vector_with_speed
+    
+    def shoot(self):
+        shot = Shot(self.position.x, self.position.y)
+        shot.velocity = pygame.Vector2(0,1)
+        shot.velocity = shot.velocity.rotate(self.rotation)
+        shot.velocity = shot.velocity * PLAYER_SHOOT_SPEED
+        self.shot_cooldown_timer = PLAYER_SHOOT_COOLDOWN_SECONDS
+            
